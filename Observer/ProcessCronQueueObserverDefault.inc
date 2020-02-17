@@ -73,11 +73,13 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
      * @param \Magento\Framework\Stdlib\DateTime\DateTime $dateTime
      * @param \Magento\Framework\Process\PhpExecutableFinderFactory $phpExecutableFinderFactory
      * @param \Psr\Log\LoggerInterface $logger
-     * @param \Magento\Framework\App\State $state
-     * @param \KiwiCommerce\CronScheduler\Helper\Schedule $scheduleHelper
-     * @param \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper
+     * @param State $state
      * @param StatFactory $statFactory
      * @param \Magento\Framework\Lock\LockManagerInterface $lockManager
+     * @param \Magento\Framework\Event\ManagerInterface $eventManager
+     * @param DeadlockRetrierInterface $retrier
+     * @param \KiwiCommerce\CronScheduler\Helper\Schedule $scheduleHelper
+     * @param \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
@@ -94,12 +96,14 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
         \Magento\Framework\App\State $state,
         StatFactory $statFactory,
         \Magento\Framework\Lock\LockManagerInterface $lockManager,
+        \Magento\Framework\Event\ManagerInterface $eventManager,
+        DeadlockRetrierInterface $retrier,
         \KiwiCommerce\CronScheduler\Helper\Schedule $scheduleHelper,
         \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper
     ) {
 
         $construct = "__construct"; // in order to bypass the compiler
-        parent::$construct($objectManager, $scheduleFactory, $cache, $config, $scopeConfig, $request, $shell, $dateTime, $phpExecutableFinderFactory, $logger, $state, $statFactory, $lockManager);
+        parent::$construct($objectManager, $scheduleFactory, $cache, $config, $scopeConfig, $request, $shell, $dateTime, $phpExecutableFinderFactory, $logger, $state, $statFactory, $lockManager, $eventManager, $retrier);
         $this->logger = $logger;
         $this->state = $state;
         $this->statProfiler = $statFactory->create();
