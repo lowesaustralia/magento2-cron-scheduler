@@ -77,7 +77,7 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
      * @param StatFactory $statFactory
      * @param \Magento\Framework\Lock\LockManagerInterface $lockManager
      * @param \Magento\Framework\Event\ManagerInterface $eventManager
-     * @param DeadlockRetrierInterface $retrier
+     * @param \Magento\Cron\Model\DeadlockRetrierInterface $retrier
      * @param \KiwiCommerce\CronScheduler\Helper\Schedule $scheduleHelper
      * @param \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -97,7 +97,7 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
         StatFactory $statFactory,
         \Magento\Framework\Lock\LockManagerInterface $lockManager,
         \Magento\Framework\Event\ManagerInterface $eventManager,
-        DeadlockRetrierInterface $retrier,
+        \Magento\Cron\Model\DeadlockRetrierInterface $retrier,
         \KiwiCommerce\CronScheduler\Helper\Schedule $scheduleHelper,
         \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper
     ) {
