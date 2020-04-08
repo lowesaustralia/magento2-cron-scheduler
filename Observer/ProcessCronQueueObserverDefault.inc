@@ -213,12 +213,12 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
     private function lockGroup($groupId, callable $callback)
     {
         if (!$this->lockManager->lock(self::LOCK_PREFIX . $groupId, self::LOCK_TIMEOUT)) {
-            $this->logger->warning(
+            /*$this->logger->warning(
                 sprintf(
                     "Could not acquire lock for cron group: %s, skipping run",
                     $groupId
                 )
-            );
+            );*/
             return;
         }
         try {
@@ -277,7 +277,7 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
         $this->eventManager->dispatch('cron_job_run', ['job_name' => 'cron/' . $groupId . '/' . $jobCode]);
 
         try {
-            $this->logger->info(sprintf('Cron Job %s is run', $jobCode));
+            // $this->logger->info(sprintf('Cron Job %s is run', $jobCode));
             //phpcs:ignore Magento2.Functions.DiscouragedFunction
             call_user_func_array($callback, [$schedule]);
         } catch (\Throwable $e) {
@@ -311,13 +311,13 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
             )
         );
 
-        $this->logger->info(
+        /*$this->logger->info(
             sprintf(
                 'Cron Job %s is successfully finished. Statistics: %s',
                 $jobCode,
                 $this->getProfilingStat()
             )
-        );
+        );*/
     }
 
     /**
@@ -504,7 +504,7 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
         }
 
         if ($count) {
-            $this->logger->info(sprintf('%d cron jobs were cleaned', $count));
+            // $this->logger->info(sprintf('%d cron jobs were cleaned', $count));
         }
     }
 
@@ -588,7 +588,7 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
                 ]
             );
 
-            $this->logger->info(sprintf('%d cron jobs were cleaned', $count));
+            // $this->logger->info(sprintf('%d cron jobs were cleaned', $count));
         }
     }
 
@@ -731,7 +731,7 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
                     $this->scheduleHelper->setMemoryUsage($schedule);
                     break;
                 }
-                $this->logger->warning("Could not acquire lock for cron job: {$schedule->getJobCode()}");
+                // $this->logger->warning("Could not acquire lock for cron job: {$schedule->getJobCode()}");
             }
         } catch (\Exception $e) {
             $this->processError($schedule, $e);
@@ -758,7 +758,7 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
         if ($schedule->getStatus() === Schedule::STATUS_MISSED
             && $this->state->getMode() === State::MODE_DEVELOPER
         ) {
-            $this->logger->info($schedule->getMessages());
+            // $this->logger->info($schedule->getMessages());
         }
     }
 
