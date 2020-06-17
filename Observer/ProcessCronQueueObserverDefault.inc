@@ -731,7 +731,7 @@ class ProcessCronQueueObserverDefault extends \Magento\Cron\Observer\ProcessCron
                     $this->scheduleHelper->setMemoryUsage($schedule);
                     break;
                 }
-                // $this->logger->warning("Could not acquire lock for cron job: {$schedule->getJobCode()}");
+                $this->logger->warning("Could not acquire lock for cron job: {$schedule->getJobCode()}");
             }
         } catch (\Exception $e) {
             $this->processError($schedule, $e);
