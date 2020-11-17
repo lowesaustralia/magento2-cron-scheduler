@@ -88,11 +88,10 @@ class CronJobDataProvider extends AbstractDataProvider
         $jobCode = $this->request->getParam('job_code');
         if (!empty($jobCode)) {
             if (isset($this->loadedData[$jobCode])) {
-                /* custom fix for undefined index: config_path */
-                $configPath = (!empty($this->loadedData[$jobCode]['config_path']) ?: false);
-                if ($configPath) {
+                if (isset($this->loadedData[$jobCode]['config_path']) && $configPath = $this->loadedData[$jobCode]['config_path']) {
                     $this->loadedData[$jobCode]['schedule'] = $this->scopeConfig->getValue($configPath);
                 }
+
                 $this->loadedData[$jobCode]['oldexpressionvalue'] = $this->loadedData[$jobCode]['schedule'];
             }
         }

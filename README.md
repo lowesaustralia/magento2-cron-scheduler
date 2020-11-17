@@ -1,3 +1,5 @@
+# We're not maintaining this extension, if you need any support please contact us at hello@kiwicommerce.co.uk
+
 # Magento 2 - Cron Scheduler by [KiwiCommerce](https://kiwicommerce.co.uk/)
 - Easily set up cron jobs
 - Manage cron jobs from the backend
@@ -13,7 +15,9 @@
       - Navigate to your Magento root folder<br />
             `cd path_to_the_magento_root_directory`
       - Then run the following command<br />
-            `composer require kiwicommerce/module-cron-scheduler`
+            `composer require kiwicommerce/module-cron-scheduler`<br />
+            For Magento version < v2.3.5, please use the following older version<br />
+            `composer require kiwicommerce/module-cron-scheduler:1.0.6`
       - Make sure that composer finished the installation without errors
 
  2. Command Line Installation
