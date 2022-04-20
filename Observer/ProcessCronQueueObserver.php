@@ -369,9 +369,9 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
                 function ($groupId) use ($currentTime, $jobsRoot) {
                     $this->cleanupJobs($groupId, $currentTime);
                     $this->generateSchedules($groupId);
-                    $this->processPendingJobs($groupId, $jobsRoot, $currentTime);
                 }
             );
+            $this->processPendingJobs($groupId, $jobsRoot, $currentTime);
         }
     }
 
@@ -598,15 +598,28 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
                 continue;
             }
 
+            if (isset($jobConfig['is_active']) && (int)$jobConfig['is_active'] == 0 && !isset($jobConfig['instance'], $jobConfig['method'])) {
+                continue;
+            }
+
             try {
-                if ($schedule->tryLockJob()) {
+                /*if ($schedule->tryLockJob()) {
                     $this->scheduleHelper->setPid($schedule);
                     $cpu_before = getrusage();
                     $this->_runJob($scheduledTime, $currentTime, $jobConfig, $schedule, $groupId);
                     $cpu_after = getrusage();
                     $this->scheduleHelper->setCpuUsage($cpu_after, $cpu_before, $schedule);
                     $this->scheduleHelper->setMemoryUsage($schedule);
-                }
+                }*/
+
+                $this->scheduleHelper->setPid($schedule);
+                $cpu_before = getrusage();
+                $this->tryRunJob($scheduledTime, $currentTime, $jobConfig, $schedule, $groupId);
+                $cpu_after = getrusage();
+                $this->scheduleHelper->setCpuUsage($cpu_after, $cpu_before, $schedule);
+                $this->scheduleHelper->setMemoryUsage($schedule);
+
+
             } catch (\Exception $e) {
                 $this->processError($schedule, $e);
                 $schedule->setErrorMessage($e->getMessage());
@@ -618,6 +631,37 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
             $schedule->save();
         }
     }
+
+    /**
+     * Try to acquire lock for cron job and try to run this job.
+     *
+     * @param int $scheduledTime
+     * @param int $currentTime
+     * @param string[] $jobConfig
+     * @param Schedule $schedule
+     * @param string $groupId
+     */
+    private function tryRunJob($scheduledTime, $currentTime, $jobConfig, $schedule, $groupId)
+    {
+        // use sha1 to limit length
+        // phpcs:ignore Magento2.Security.InsecureFunction
+        $lockName =  self::LOCK_PREFIX . md5($groupId . '_' . $schedule->getJobCode());
+
+        try {
+            for ($retries = self::MAX_RETRIES; $retries > 0; $retries--) {
+                if ($this->lockManager->lock($lockName, 0) && $schedule->tryLockJob()) {
+                    $this->_runJob($scheduledTime, $currentTime, $jobConfig, $schedule, $groupId);
+                    break;
+                }
+                $this->logger->warning("Could not acquire lock for cron job: {$schedule->getJobCode()}");
+            }
+        } catch (\Exception $e) {
+            $this->processError($schedule, $e);
+        } finally {
+            $this->lockManager->unlock($lockName);
+        }
+    }
+
 
     /**
      * Save a schedule of cron job.
