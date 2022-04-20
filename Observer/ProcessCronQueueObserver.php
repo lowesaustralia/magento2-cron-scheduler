@@ -124,18 +124,18 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
         $scheduleLifetime = $this->getCronGroupConfigurationValue($groupId, self::XML_PATH_SCHEDULE_LIFETIME);
         $scheduleLifetime = $scheduleLifetime * self::SECONDS_IN_MINUTE;
         if ($scheduledTime < $currentTime - $scheduleLifetime) {
-
-            // -- DEBUG::START
-            $this->logger->error(print_r($jobCode, true));
-            $this->logger->error(print_r($jobConfig, true));
-            // -- DEBUG::END
-
             $schedule->setStatus(Schedule::STATUS_MISSED);
             // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception(sprintf('Cron Job %s is missed at %s', $jobCode, $schedule->getScheduledAt()));
         }
 
         if (!isset($jobConfig['instance'], $jobConfig['method'])) {
+
+            // -- DEBUG::START
+            $this->logger->error(print_r($jobCode, true));
+            $this->logger->error(print_r($jobConfig, true));
+            // -- DEBUG::END
+
             $schedule->setStatus(Schedule::STATUS_ERROR);
             // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception(sprintf('No callbacks found for cron job %s', $jobCode));
@@ -604,7 +604,8 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
                 continue;
             }
 
-            if (isset($jobConfig['is_active']) && (int)$jobConfig['is_active'] == 0 && !isset($jobConfig['instance'], $jobConfig['method'])) {
+            if (isset($jobConfig['is_active']) && (int)$jobConfig['is_active'] === 0) {
+                // don't proceed further if it's inactive
                 continue;
             }
 
