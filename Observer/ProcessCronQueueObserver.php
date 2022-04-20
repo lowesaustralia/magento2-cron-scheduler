@@ -604,8 +604,15 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
                 continue;
             }
 
-            if (isset($jobConfig['is_active']) && (int)$jobConfig['is_active'] === 0) {
+            if ((isset($jobConfig['is_active']) && (int)$jobConfig['is_active'] === 0) || !isset($jobConfig['instance'], $jobConfig['method'])) {
                 // don't proceed further if it's inactive
+                // or if both instance/method are not defined
+
+                // -- DEBUG::START
+                $this->logger->error(print_r($schedule->getJobCode(), true));
+                $this->logger->error(print_r($jobConfig, true));
+                // -- DEBUG::END
+
                 continue;
             }
 
