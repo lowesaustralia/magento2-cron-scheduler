@@ -124,6 +124,12 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
         $scheduleLifetime = $this->getCronGroupConfigurationValue($groupId, self::XML_PATH_SCHEDULE_LIFETIME);
         $scheduleLifetime = $scheduleLifetime * self::SECONDS_IN_MINUTE;
         if ($scheduledTime < $currentTime - $scheduleLifetime) {
+
+            // -- DEBUG::START
+            $this->logger->error(print_r($jobCode, true));
+            $this->logger->error(print_r($jobConfig, true));
+            // -- DEBUG::END
+
             $schedule->setStatus(Schedule::STATUS_MISSED);
             // phpcs:ignore Magento2.Exceptions.DirectThrow
             throw new \Exception(sprintf('Cron Job %s is missed at %s', $jobCode, $schedule->getScheduledAt()));
