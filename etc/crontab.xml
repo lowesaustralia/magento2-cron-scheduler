@@ -14,12 +14,12 @@
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
-    <group id="index">
+    <group id="index_custom_kiwi">
         <job name="kiwicommerce_cronscheduler_status" instance="KiwiCommerce\CronScheduler\Cron\Status" method="checkstatus">
             <schedule>* * * * *</schedule>
         </job>
     </group>
-    <group id="default">
+    <group id="default_kiwi">
         <job name="kiwicommerce_cronscheduler_jobchecker" instance="KiwiCommerce\CronScheduler\Cron\LongJobChecker" method="execute">
             <schedule>*/15 * * * *</schedule>
         </job>
