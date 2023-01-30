@@ -150,7 +150,7 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
             );
         }
 
-        $schedule->setExecutedAt(strftime('%Y-%m-%d %H:%M:%S', $this->dateTime->gmtTimestamp()))->save();
+        $schedule->setExecutedAt(date('%Y-%m-%d %H:%M:%S', $this->dateTime->gmtTimestamp()))->save();
 
         $this->startProfiling();
         try {
@@ -182,7 +182,7 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
         $schedule->setStatus(
             Schedule::STATUS_SUCCESS
         )->setFinishedAt(
-            strftime(
+            date(
                 '%Y-%m-%d %H:%M:%S',
                 $this->dateTime->gmtTimestamp()
             )
