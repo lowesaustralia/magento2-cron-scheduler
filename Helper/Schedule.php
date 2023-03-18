@@ -122,10 +122,7 @@ class Schedule extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function filterTimeInput($time)
     {
-        $matches = [];
-        preg_match('/(\d+-\d+-\d+)T(\d+:\d+)/', $time, $matches);
-        $time = $matches[1] . " " . $matches[2];
-        return date('Y-m-d H:i:s', strtotime($time));
+        return date('Y-m-d H:i:s', strtotime((string)$time));
     }
 
     /**
