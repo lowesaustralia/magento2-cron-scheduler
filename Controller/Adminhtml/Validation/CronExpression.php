@@ -45,7 +45,7 @@ class CronExpression extends \Magento\Backend\App\Action
             $result = true;
             foreach ($exprArray as $expr) {
                 if (!empty($expr)) {
-                    $e = preg_split('#\s+#', $expr, null, PREG_SPLIT_NO_EMPTY);
+                    $e = preg_split('#\s+#', $expr, -1, PREG_SPLIT_NO_EMPTY);
                     if (count($e) < 5 || count($e) > 6) {
                         $result = false;
                         break;
