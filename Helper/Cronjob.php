@@ -234,10 +234,15 @@ class Cronjob extends \Magento\Framework\App\Helper\AbstractHelper
     public function checkIfCronExists($jobData, $cronExpr, $data)
     {
         $instance = $data['instance'];
-        $method   = $data['method'];
+        $method = $data['method'];
         $result = false;
         foreach (array_values($jobData) as $job) {
-            if ($job['instance']==$instance && $job['method']==$method) {
+            if (
+                isset($job['instance'])
+                && $job['instance'] === $instance
+                && isset($job['method'])
+                && $job['method'] === $method
+            ) {
                 if (isset($job['schedule']) && $job['schedule'] == $cronExpr) {
                     $result = true;
                     break;
