@@ -14,6 +14,7 @@
 
 namespace KiwiCommerce\CronScheduler\Observer;
 
+use Laminas\Http\PhpEnvironment\Request as Environment;
 use Magento\Cron\Model\Schedule;
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
@@ -58,6 +59,20 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
     private $state;
 
     /**
+     * @var Environment
+     */
+    private Environment $environment;
+
+    /**
+     * @var string
+     */
+    private string $originalProcessTitle;
+    /**
+     * @var DeadlockRetrierInterface
+     */
+    private $retrier;
+
+    /**
      * @param \Magento\Framework\ObjectManagerInterface $objectManager
      * @param \Magento\Cron\Model\ScheduleFactory $scheduleFactory
      * @param \Magento\Framework\App\CacheInterface $cache
@@ -75,6 +90,7 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
      * @param \Magento\Cron\Model\DeadlockRetrierInterface $retrier
      * @param \KiwiCommerce\CronScheduler\Helper\Schedule $scheduleHelper
      * @param \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper
+     * @param Environment $environment
      */
     public function __construct(
         \Magento\Framework\ObjectManagerInterface $objectManager,
@@ -93,18 +109,21 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
         \Magento\Framework\Event\ManagerInterface $eventManager,
         \Magento\Cron\Model\DeadlockRetrierInterface $retrier,
         \KiwiCommerce\CronScheduler\Helper\Schedule $scheduleHelper,
-        \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper
+        \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper,
+        Environment $environment
     ) {
         parent::__construct(
             $objectManager, $scheduleFactory, $cache, $config, $scopeConfig,
             $request, $shell, $dateTime, $phpExecutableFinderFactory, $logger,
-            $state, $statFactory, $lockManager, $eventManager, $retrier);
+            $state, $statFactory, $lockManager, $eventManager, $retrier, $environment);
         $this->logger = $logger;
         $this->state = $state;
         $this->statProfiler = $statFactory->create();
         $this->lockManager = $lockManager;
         $this->scheduleHelper = $scheduleHelper;
         $this->jobHelper = $jobHelper;
+        $this->environment = $environment;
+        $this->retrier = $retrier;
     }
 
     /**
@@ -117,17 +136,11 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
      * @param string $groupId
      * @return void
      * @throws \Exception
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     protected function _runJob($scheduledTime, $currentTime, $jobConfig, $schedule, $groupId)
     {
         $jobCode = $schedule->getJobCode();
-        $scheduleLifetime = $this->getCronGroupConfigurationValue($groupId, self::XML_PATH_SCHEDULE_LIFETIME);
-        $scheduleLifetime = $scheduleLifetime * self::SECONDS_IN_MINUTE;
-        if ($scheduledTime < $currentTime - $scheduleLifetime) {
-            $schedule->setStatus(Schedule::STATUS_MISSED);
-            // phpcs:ignore Magento2.Exceptions.DirectThrow
-            throw new \Exception(sprintf('Cron Job %s is missed at %s', $jobCode, $schedule->getScheduledAt()));
-        }
 
         if (!isset($jobConfig['instance'], $jobConfig['method'])) {
 
@@ -150,6 +163,7 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
             );
         }
 
+        $this->setProcessTitle($jobCode, $groupId);
         $schedule->setExecutedAt(date('Y-m-d H:i:s', $this->dateTime->gmtTimestamp()))->save();
 
         $this->startProfiling();
@@ -357,6 +371,9 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
             if (!$this->isGroupInFilter($groupId)) {
                 continue;
             }
+            if ($this->isGroupInExcludeFilter($groupId)) {
+                continue;
+            }
             if ($this->_request->getParam(self::STANDALONE_PROCESS_STARTED) !== '1'
                 && $this->getCronGroupConfigurationValue($groupId, 'use_separate_process') == 1
             ) {
@@ -528,6 +545,18 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
     }
 
     /**
+     * Is Group In Exclude Filter.
+     *
+     * @param string $groupId
+     * @return bool
+     */
+    private function isGroupInExcludeFilter($groupId): bool
+    {
+        $excludeGroup = $this->_request->getParam('exclude-group', []);
+        return is_array($excludeGroup) && in_array($groupId, $excludeGroup);
+    }
+
+    /**
      * Lock group
      *
      * It should be taken by standalone (child) process, not by the parent process.
@@ -600,7 +629,7 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
             }
 
             $scheduledTime = strtotime($schedule->getScheduledAt());
-            if ($scheduledTime > $currentTime) {
+            if (!$this->shouldRunJob($schedule, $groupId, $currentTime, (int) $scheduledTime)) {
                 continue;
             }
 
@@ -714,5 +743,83 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
     private function stopProfiling()
     {
         $this->statProfiler->stop('job', microtime(true), memory_get_usage(true), memory_get_usage());
+    }
+
+    /**
+     * Set the process title to include the job code and group
+     *
+     * @param string $jobCode
+     * @param string $groupId
+     */
+    private function setProcessTitle(string $jobCode, string $groupId): void
+    {
+        if (!isset($this->originalProcessTitle)) {
+            $this->originalProcessTitle = PHP_BINARY . ' ' . implode(' ', $this->environment->getServer('argv'));
+        }
+
+        if (strpos($this->originalProcessTitle, " --group=$groupId ") !== false) {
+            // Group is already shown, so no need to include here in duplicate
+            cli_set_process_title($this->originalProcessTitle . " # job: $jobCode");
+        } else {
+            cli_set_process_title($this->originalProcessTitle . " # group: $groupId, job: $jobCode");
+        }
+    }
+
+    /**
+     * Mark job as missed
+     *
+     * @param Schedule $schedule
+     * @return void
+     */
+    private function markJobAsMissed(Schedule $schedule): void
+    {
+        $jobCode = $schedule->getJobCode();
+        $scheduleId = $schedule->getId();
+        $resource = $schedule->getResource();
+        $connection = $resource->getConnection();
+        $message = sprintf('Cron Job %s is missed at %s', $jobCode, $schedule->getScheduledAt());
+        $result = $this->retrier->execute(
+            function () use ($resource, $connection, $scheduleId, $message) {
+                return $connection->update(
+                    $resource->getTable('cron_schedule'),
+                    ['status' => Schedule::STATUS_MISSED, 'messages' => $message],
+                    ['schedule_id = ?' => $scheduleId, 'status = ?' => Schedule::STATUS_PENDING]
+                );
+            },
+            $connection
+        );
+        if ($result == 1) {
+            $schedule->setStatus(Schedule::STATUS_MISSED);
+            $schedule->setMessages($message);
+            if ($this->state->getMode() === State::MODE_DEVELOPER) {
+                $this->logger->info($message);
+            }
+        }
+    }
+
+    /**
+     * Check if job should be run
+     *
+     * @param Schedule $schedule
+     * @param string $groupId
+     * @param int $currentTime
+     * @param int $scheduledTime
+     * @return bool
+     */
+    private function shouldRunJob(Schedule $schedule, string $groupId, int $currentTime, int $scheduledTime): bool
+    {
+        if ($scheduledTime > $currentTime) {
+            return false;
+        }
+
+        $scheduleLifetime = $this->getCronGroupConfigurationValue($groupId, self::XML_PATH_SCHEDULE_LIFETIME);
+        $scheduleLifetime = $scheduleLifetime * self::SECONDS_IN_MINUTE;
+
+        if ($scheduledTime < $currentTime - $scheduleLifetime) {
+            $this->markJobAsMissed($schedule);
+            return false;
+        }
+
+        return true;
     }
 }
