@@ -754,7 +754,16 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
     private function setProcessTitle(string $jobCode, string $groupId): void
     {
         if (!isset($this->originalProcessTitle)) {
-            $this->originalProcessTitle = PHP_BINARY . ' ' . implode(' ', $this->environment->getServer('argv'));
+            $argv = $this->environment->getServer('argv');
+            if ($argv) {
+                if (is_array($argv)) {
+                    $this->originalProcessTitle = PHP_BINARY . ' ' . implode(' ', $this->environment->getServer('argv'));
+                } else {
+                    $this->originalProcessTitle = PHP_BINARY . ' ' .  $this->environment->getServer('argv');
+                }
+            } else {
+                $this->originalProcessTitle = PHP_BINARY;
+            }
         }
 
         if (strpos($this->originalProcessTitle, " --group=$groupId ") !== false) {
