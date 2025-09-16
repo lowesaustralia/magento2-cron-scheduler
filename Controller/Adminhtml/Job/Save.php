@@ -100,6 +100,15 @@ class Save extends \Magento\Backend\App\Action
                     $sucess[] = $cronExpr;
                 }
 
+                #Update the status in Edit page
+                if (isset($data['name'], $data['is_active']) && isset($jobData[$data['name']])
+                    && is_array($jobData[$data['name']]) && isset($jobData[$data['name']]['is_active'])
+                ) {
+                    if ($jobData[$data['name']]['is_active'] != $data['is_active']) {
+                        $this->jobModel->changeJobStatus($jobData[$data['name']], $data['is_active']);
+                    }
+                }
+
                 $this->cacheTypeList->cleanType('config');
                 if (isset($sucess) && !empty($sucess)) {
                     $this->messageManager->addSuccessMessage(__('You saved the cron job for expressions - '.join(',', $sucess)));
