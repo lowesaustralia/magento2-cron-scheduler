@@ -87,8 +87,8 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
      * @param \Magento\Framework\Profiler\Driver\Standard\StatFactory $statFactory
      * @param \Magento\Framework\Lock\LockManagerInterface $lockManager
      * @param \Magento\Framework\Event\ManagerInterface $eventManager
-     * @param \Magento\Cron\Model\DeadlockRetrierInterface $retrier,
-     * @param \Laminas\Http\PhpEnvironment\Request $environment ,
+     * @param \Magento\Cron\Model\DeadlockRetrierInterface $retrier
+     * @param \Laminas\Http\PhpEnvironment\Request $environment
      * @param \KiwiCommerce\CronScheduler\Helper\Schedule $scheduleHelper
      * @param \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper
      */
