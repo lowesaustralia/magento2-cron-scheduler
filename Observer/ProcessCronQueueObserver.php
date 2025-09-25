@@ -768,9 +768,13 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
 
         if (strpos($this->originalProcessTitle, " --group=$groupId ") !== false) {
             // Group is already shown, so no need to include here in duplicate
-            cli_set_process_title($this->originalProcessTitle . " # job: $jobCode");
+            if (function_exists('cli_set_process_title')) {
+                cli_set_process_title($this->originalProcessTitle . " # job: $jobCode");
+            }
         } else {
-            cli_set_process_title($this->originalProcessTitle . " # group: $groupId, job: $jobCode");
+            if (function_exists('cli_set_process_title')) {
+                cli_set_process_title($this->originalProcessTitle . " # group: $groupId, job: $jobCode");
+            }
         }
     }
 
