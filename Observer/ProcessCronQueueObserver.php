@@ -87,10 +87,10 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
      * @param \Magento\Framework\Profiler\Driver\Standard\StatFactory $statFactory
      * @param \Magento\Framework\Lock\LockManagerInterface $lockManager
      * @param \Magento\Framework\Event\ManagerInterface $eventManager
-     * @param \Magento\Cron\Model\DeadlockRetrierInterface $retrier
+     * @param \Magento\Cron\Model\DeadlockRetrierInterface $retrier,
+     * @param \Laminas\Http\PhpEnvironment\Request $environment ,
      * @param \KiwiCommerce\CronScheduler\Helper\Schedule $scheduleHelper
      * @param \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper
-     * @param Environment $environment
      */
     public function __construct(
         \Magento\Framework\ObjectManagerInterface $objectManager,
@@ -110,8 +110,7 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
         \Magento\Cron\Model\DeadlockRetrierInterface $retrier,
         \Laminas\Http\PhpEnvironment\Request $environment,
         \KiwiCommerce\CronScheduler\Helper\Schedule $scheduleHelper,
-        \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper,
-        Environment $environment
+        \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper
     ) {
         parent::__construct(    
             $objectManager, $scheduleFactory, $cache, $config, $scopeConfig,
