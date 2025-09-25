@@ -118,17 +118,11 @@ class JobProvider extends \Magento\Ui\DataProvider\AbstractDataProvider
         #sorting
         $sortField = $this->sortField;
         $sortDir = $this->sortDir;
+
         usort($data, function ($a, $b) use ($sortField, $sortDir) {
-            if ($sortDir === "asc") {
-                try {
-                    return $a[$sortField] > $b[$sortField] ? 1 : -1;
-                } catch (\Exception $e) {
-                }
-            }
-            try {
-                return $a[$sortField] < $b[$sortField] ? 1 : -1;
-            } catch (\Exception $e) {
-            }
+            return $sortDir === 'asc'
+                ? $a[$sortField] <=> $b[$sortField]
+                : $b[$sortField] <=> $a[$sortField];
         });
 
         #filters

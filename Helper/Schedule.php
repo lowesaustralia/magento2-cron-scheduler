@@ -122,7 +122,10 @@ class Schedule extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function filterTimeInput($time)
     {
-        return date('Y-m-d H:i:s', strtotime((string)$time));
+        $matches = [];
+        preg_match('/(\d+-\d+-\d+)T(\d+:\d+)/', $time, $matches);
+        $time = $matches[1] . " " . $matches[2];
+        return strftime('%Y-%m-%d %H:%M:00', strtotime($time));
     }
 
     /**
@@ -137,8 +140,7 @@ class Schedule extends \Magento\Framework\App\Helper\AbstractHelper
         } else {
             $currentTime = (int)$this->datetime->date('U') + $this->datetime->getGmtOffset('hours') * 60 * 60;
         }
-        $lastCronStatusString = $this->scheduleCollectionFactory->create()->getLastCronStatus();
-        $lastCronStatus = $lastCronStatusString !== null ? strtotime($lastCronStatusString) : null;
+        $lastCronStatus = strtotime($this->scheduleCollectionFactory->create()->getLastCronStatus() ?? '');
         if ($lastCronStatus != null) {
             $diff = floor(($currentTime - $lastCronStatus) / 60);
             if ($diff > 5) {

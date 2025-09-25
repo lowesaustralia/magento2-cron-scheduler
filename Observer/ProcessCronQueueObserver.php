@@ -108,11 +108,12 @@ class ProcessCronQueueObserver extends \Magento\Cron\Observer\ProcessCronQueueOb
         \Magento\Framework\Lock\LockManagerInterface $lockManager,
         \Magento\Framework\Event\ManagerInterface $eventManager,
         \Magento\Cron\Model\DeadlockRetrierInterface $retrier,
+        \Laminas\Http\PhpEnvironment\Request $environment,
         \KiwiCommerce\CronScheduler\Helper\Schedule $scheduleHelper,
         \KiwiCommerce\CronScheduler\Helper\Cronjob $jobHelper,
         Environment $environment
     ) {
-        parent::__construct(
+        parent::__construct(    
             $objectManager, $scheduleFactory, $cache, $config, $scopeConfig,
             $request, $shell, $dateTime, $phpExecutableFinderFactory, $logger,
             $state, $statFactory, $lockManager, $eventManager, $retrier, $environment);
