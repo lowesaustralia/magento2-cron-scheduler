@@ -122,10 +122,31 @@ class Schedule extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function filterTimeInput($time)
     {
-        $matches = [];
-        preg_match('/(\d+-\d+-\d+)T(\d+:\d+)/', $time, $matches);
-        $time = $matches[1] . " " . $matches[2];
-        return strftime('%Y-%m-%d %H:%M:00', strtotime($time));
+        // Support DateTime objects directly
+        if ($time instanceof \DateTimeInterface) {
+            $timestamp = $time->getTimestamp();
+        } elseif (is_numeric($time)) {
+            // Numeric input (timestamp) — cast to int
+            $timestamp = (int)$time;
+        } else {
+            $matches = [];
+            // If input matches ISO-like pattern (YYYY-MM-DDTHH:MM) extract components safely
+            if (is_string($time) && preg_match('/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/', $time, $matches) && isset($matches[1], $matches[2])) {
+                $time = $matches[1] . " " . $matches[2];
+                $timestamp = strtotime($time);
+            } else {
+                // Fallback: try to parse the provided value with strtotime
+                $timestamp = strtotime($time);
+            }
+        }
+
+        if ($timestamp === false || $timestamp === null) {
+            // Unable to parse — return empty string to avoid returning invalid time
+            return '';
+        }
+
+        // Use date() for consistent formatting across platforms
+        return date('Y-m-d H:i:00', $timestamp);
     }
 
     /**
