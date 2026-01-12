@@ -23,7 +23,8 @@
         <job name="kiwicommerce_cronscheduler_jobchecker" instance="KiwiCommerce\CronScheduler\Cron\LongJobChecker" method="execute">
             <schedule>*/15 * * * *</schedule>
         </job>
-        <job name="kiwicommerce_send_email" instance="KiwiCommerce\CronScheduler\Controller\Adminhtml\Cron\Sendemail" method="execute">
+        <!--<job name="kiwicommerce_send_email" instance="KiwiCommerce\CronScheduler\Controller\Adminhtml\Cron\Sendemail" method="execute">-->
+        <job name="kiwicommerce_send_email" instance="KiwiCommerce\CronScheduler\Model\Email\Sender" method="execute">
             <config_path>cronscheduler/general/schedule</config_path>
         </job>
     </group>
