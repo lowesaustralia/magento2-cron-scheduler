@@ -25,7 +25,7 @@ class Status
      * @param \Magento\Cron\Model\Schedule|null $schedule
      * @throws \Exception
      */
-    public function checkstatus(\Magento\Cron\Model\Schedule $schedule = null)
+    public function checkstatus(?\Magento\Cron\Model\Schedule $schedule = null)
     {
         $schedule->setMessages(__("Cron is Working"));
         $schedule->save();
